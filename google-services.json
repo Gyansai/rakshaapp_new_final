@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "52861980730",
+    "firebase_url": "https://raksha-9de00.firebaseio.com",
+    "project_id": "raksha-9de00",
+    "storage_bucket": "raksha-9de00.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:52861980730:android:c8617924c0fd7dca",
+        "android_client_info": {
+          "package_name": "com.ksemin.raksha"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "52861980730-jie65da90nsujs2r3cmte4oefg9lj0ud.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ksemin.raksha",
+            "certificate_hash": "c2a8678b655f4bcf8c96dff7ddfef7bc7feebcce"
+          }
+        },
+        {
+          "client_id": "52861980730-v3pknddstrb7j4ilsruicmn317msd7s6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwhj-98oPTCoqxaJB_WETMq5b1M1OcWKs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "52861980730-v3pknddstrb7j4ilsruicmn317msd7s6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

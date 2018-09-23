@@ -1,0 +1,62 @@
+apply plugin: 'com.android.application'
+apply plugin: 'realm-android'
+
+android {
+    compileSdkVersion 27
+    defaultConfig {
+        applicationId "com.ksemin.raksha"
+        minSdkVersion 23
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+    }
+    buildTypes {
+//        debug {
+//            // suffixing the package name for debug builds,
+//            // in order to partially mute the crash-reporting
+//            // is an *optional* configuration (see below):
+//            applicationIdSuffix ".debug"
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+repositories {
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    //noinspection GradleCompatible
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.google.firebase:firebase-messaging:11.8.0'
+    implementation 'com.android.support:design:27.1.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.1'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation 'com.redbooth:WelcomeCoordinator:1.0.1'
+    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.flaviofaria:kenburnsview:1.0.7'
+    implementation 'com.android.support:multidex:1.0.3'
+    implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
+    compile 'com.github.GoodieBag:Pinview:v1.3'
+    compile 'com.github.deano2390:MaterialShowcaseView:1.2.0'
+    implementation 'com.cuneytayyildiz:onboarder:1.0.2'
+    compile 'com.github.hajiyevelnur92:intentanimation:1.0'
+
+    compile 'com.github.halysongoncalves:pugnotification:1.8.1'
+    compile 'com.squareup.retrofit2:retrofit:2.3.0'
+
+// JSON Parsing
+    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
+
+}
+    apply plugin: 'com.google.gms.google-services'
+
+

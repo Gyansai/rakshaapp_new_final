@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.github.halysongoncalves:pugnotification-1.8.1">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/pugnotification-1.8.1.aar/fb227fa9db3b74833477a8bc9ccda5eb/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/pugnotification-1.8.1.aar/fb227fa9db3b74833477a8bc9ccda5eb/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.halysongoncalves/pugnotification/1.8.1/1afa8ef16042cfd60f4499e548f48a83bbabc467/pugnotification-1.8.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
