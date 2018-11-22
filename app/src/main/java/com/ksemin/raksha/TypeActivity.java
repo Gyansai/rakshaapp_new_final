@@ -1,6 +1,10 @@
 package com.ksemin.raksha;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,9 +17,13 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.support.annotation.RequiresApi;
+import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsManager;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
@@ -28,24 +36,23 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.flaviofaria.kenburnsview.KenBurnsView;
+import com.goodiebag.pinview.Pinview;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.ksemin.raksha.data.model.Post;
+import com.ksemin.raksha.data.model.remote.APIService;
 import com.ksemin.raksha.data.model.remote.APIService_carertaker;
 import com.ksemin.raksha.data.model.remote.APIService_falltest;
 import com.ksemin.raksha.data.model.remote.APIUtils_caretaker;
-import com.ksemin.raksha.data.model.remote.ApiUtils_falltest;
-import com.ksemin.raksha.helpers.Informations;
 import com.ksemin.raksha.data.model.remote.ApiUtils;
-
-
-import com.flaviofaria.kenburnsview.KenBurnsView;
-import com.goodiebag.pinview.Pinview;
+import com.ksemin.raksha.data.model.remote.ApiUtils_falltest;
 import com.ksemin.raksha.helpers.BlurImage;
-import com.ksemin.raksha.data.model.Post;
-import com.ksemin.raksha.data.model.remote.APIService;
-
+import com.ksemin.raksha.helpers.GPSTracker;
+import com.ksemin.raksha.helpers.Informations;
 import com.ksemin.raksha.wearer.bluetooth.DeviceControlActivity;
 import com.redbooth.WelcomeCoordinatorLayout;
 
+import br.com.goncalves.pugnotification.notification.PugNotification;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
@@ -60,6 +67,8 @@ public class TypeActivity extends AppCompatActivity {
     private LinearLayout mainlyt;
     private LinearLayout lytWearer;
     private LinearLayout lytCareTaker;
+    private static final int REQUEST_CODE_PERMISSION = 2;
+    String mPermission = Manifest.permission.ACCESS_FINE_LOCATION;
     private KenBurnsView image;
     private APIService mAPIService;
     private APIService_carertaker mAPIService_caretaker;
@@ -71,13 +80,15 @@ public class TypeActivity extends AppCompatActivity {
     private ImageView toOtp;
 
     //
-
+    public String phonenumber;
+    public String caretakername;
     private int TYPE_LAYOUT = 0;
     private int WEARER_LAYOUT = 1;
     private int ADD_CARETAKER_LAYOUT = 2;
     private int OTP_LAYOUT = 3;
     private ImageView ivBackToType;
     private ImageView ivNext;
+
     public int randomPIN;
     public Pinview pin;
     private static final int RESULT_PICK_CONTACT = 8;
@@ -98,7 +109,7 @@ public class TypeActivity extends AppCompatActivity {
     public Boolean maletrue = false;
     public String check;
     public Boolean femtrue = false;
-
+    public String mPhoneNumber;
     private EditText etName;
     private EditText etAge;
     private long backpresstime;
@@ -111,32 +122,40 @@ public class TypeActivity extends AppCompatActivity {
     private Button button;
 
     public String gender;
-    public  String output;
+    public String output;
     Splash msplash;
+    GPSTracker gps;
 
 
     Realm realm;
+    private TextInputLayout inputLayoutPassword;
+    private EditText carenameNme;
+    private EditText careNumber;
+    private ImageView ivCaretakerNum;
+    private ImageView careDeatils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_type);
         mAPIService = ApiUtils.getAPIService();
-        mAPIService_caretaker=  APIUtils_caretaker.getAPIService();
-        mAPIService_falltest= ApiUtils_falltest.getAPIService();
+        mAPIService_caretaker = APIUtils_caretaker.getAPIService();
+        mAPIService_falltest = ApiUtils_falltest.getAPIService();
         Realm.init(this);
-        try{
+        try {
             realm = Realm.getDefaultInstance();
 
-        }catch (Exception e){
+        } catch (Exception e) {
 
-            // Get a Realm instance for this thread
+            // Get a Realm instance for this threadini
             RealmConfiguration config = new RealmConfiguration.Builder()
                     .deleteRealmIfMigrationNeeded()
                     .build();
             realm = Realm.getInstance(config);
 
         }
+
+
         /**left-to-right
          *right-to-left
          *bottom-to-up
@@ -149,7 +168,7 @@ public class TypeActivity extends AppCompatActivity {
         mBlurImage = new BlurImage();
 
         coordinatorLayout = (WelcomeCoordinatorLayout) findViewById(R.id.coordinator);
-        coordinatorLayout.addPage(R.layout.select_type_layout, R.layout.wearer_details_layout, R.layout.add_caretaker_layout, R.layout.caretaker_login_layout);
+        coordinatorLayout.addPage(R.layout.select_type_layout, R.layout.wearer_details_layout, R.layout.add_caretaker_layout, R.layout.caretaker_login_layout, R.layout.care_take_entry_layout);
         coordinatorLayout.setScrollingEnabled(false);
         coordinatorLayout.showIndicators(false);
         initView();
@@ -162,7 +181,7 @@ public class TypeActivity extends AppCompatActivity {
             permissionCheck += this.checkSelfPermission("android.permission.SEND_SMS");
             permissionCheck += this.checkSelfPermission("android.permission.CALL_PHONE");
             if (permissionCheck != 0) {
-                this.requestPermissions(new String[]{Manifest.permission.SEND_SMS,Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.BLUETOOTH,Manifest.permission.BLUETOOTH_ADMIN,Manifest.permission.CALL_PHONE,Manifest.permission.ACCESS_COARSE_LOCATION}, 1002);
+                this.requestPermissions(new String[]{Manifest.permission.SEND_SMS, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.CALL_PHONE, Manifest.permission.ACCESS_COARSE_LOCATION}, 1002);
 
 
             }
@@ -171,7 +190,38 @@ public class TypeActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void initView() {
+
+        int notifyID = 1;
+        String CHANNEL_ID = "my_channel_01";// The id of the channel.
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+        NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, "hi", importance);
+// Create a notification and set the notification channel.
+        Notification notification = new Notification.Builder(this)
+                .setContentTitle("New Message")
+                .setContentText("You've received new messages.")
+                .setSmallIcon(R.mipmap.applogo)
+
+                .setChannelId(CHANNEL_ID)
+                .build();
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.notify(notifyID,notification);
+
+
+        TelephonyManager tMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+          mPhoneNumber = tMgr.getLine1Number();
+        gps = new GPSTracker(this);
         checkBTPermissions();
         //mPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         mainlyt = (LinearLayout) findViewById(R.id.mainlyt);
@@ -179,12 +229,32 @@ public class TypeActivity extends AppCompatActivity {
         lytCareTaker = (LinearLayout) findViewById(R.id.lytCareTaker);
         ImageView imbutton = (ImageView) findViewById(R.id.wearer_bt);
         ImageView imbutton1 = (ImageView) findViewById(R.id.caretakerbt);
-         button = (Button)findViewById(R.id.falltestbt);
-        Log.i("firebaseid",""+ FirebaseInstanceId.getInstance().getToken());
+        button = (Button) findViewById(R.id.falltestbt);
+        Toast.makeText(this,mPhoneNumber,Toast.LENGTH_LONG).show();
+
+        Log.i("can get", " lat :" + gps.canGetLocation());
+        if (gps.canGetLocation()) {
+            String latitude = Double.toString(gps.getLatitude());
+            String longitude = Double.toString(gps.getLongitude());
+
+            Log.i("can get", " lat :" + latitude);
+            Toast.makeText(this, "" + latitude, Toast.LENGTH_SHORT).show();
+            // \n is for new line
+        } else {
+            // can't get location
+            // GPS or Network is not enabled
+            // Ask user to enable GPS/network in settings
+            gps.showSettingsAlert();
+        }
+
+
+        // String lcoation = getlocation();
+        // Log.i("loc",""+lcoation);
+        // Log.i("firebaseid",""+ FirebaseInstanceId.getInstance().getToken());
 
         ShowcaseConfig config = new ShowcaseConfig();
         config.setDelay(500); // half second between each showcase view
-        boolean checknew=msplash.isfirstrun;
+        boolean checknew = msplash.isfirstrun;
 
         if (checknew) {
 
@@ -210,26 +280,31 @@ public class TypeActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i("falltest","button pressed");
-                ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+                Log.i("falltest", "button pressed");
+                String latitude = Double.toString(gps.getLatitude());
+                String longitude = Double.toString(gps.getLongitude());
+                Log.i("latest_loc", " lat :" + gps.getLocation());
+                Toast.makeText(TypeActivity.this, "" + latitude, Toast.LENGTH_SHORT).show();
+                ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo netInfo = cm.getActiveNetworkInfo();
                 if (netInfo != null && netInfo.isConnectedOrConnecting()) {
                     new post_falltest().execute();
 
                 } else {
                     SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage("+917995530093", null, "I need help  ", null, null);
-                    }
+                    smsManager.sendTextMessage("+918179535894", null, "I need help  ", null, null);
+                }
             }
         });
-        imbutton1.setOnClickListener(new View.OnClickListener(){
+        imbutton1.setOnClickListener(new View.OnClickListener() {
 
 
             @Override
             public void onClick(View v) {
-                Log.i("carebutton","pressed" );
+                Log.i("carebutton", "pressed");
                 //post post_caretaker = new post_caretaker();
-                new post_caretaker().execute();
+                coordinatorLayout.setCurrentPage(4, true);
+
             }
         });
         lytWearer.setOnClickListener(new View.OnClickListener() {
@@ -240,9 +315,9 @@ public class TypeActivity extends AppCompatActivity {
                 RealmResults<Informations> results = realm.where(Informations.class).findAllAsync();
                 //fetching the data
                 results.load();
-                output="";
-                for(Informations informations:results){
-                    output+=informations.toString();
+                output = "";
+                for (Informations informations : results) {
+                    output += informations.toString();
                 }
 
                 preview.setText(output);
@@ -259,8 +334,8 @@ public class TypeActivity extends AppCompatActivity {
             public void onClick(View v) {
                 name = etName.getEditableText().toString();
 
-                age=etAge.getText().toString();
-                bloodgrp=etBlood.getText().toString();
+                age = etAge.getText().toString();
+                bloodgrp = etBlood.getText().toString();
                 realm.beginTransaction();  //open the database
                 //database operation
                 Informations obj = realm.createObject(Informations.class);  //this will create a
@@ -271,8 +346,8 @@ public class TypeActivity extends AppCompatActivity {
                 obj.setBlood_group(bloodgrp);
                 obj.setGender(gender);   //inserted all data to database
                 realm.commitTransaction(); //close the database
-                Log.i("info",""+output);
-               // Log.i("name",""+name);
+                Log.i("info", "" + output);
+                // Log.i("name",""+name);
                 Toast.makeText(TypeActivity.this, "saving data", Toast.LENGTH_SHORT).show();
                 coordinatorLayout.setCurrentPage(2, true);
 
@@ -305,7 +380,7 @@ public class TypeActivity extends AppCompatActivity {
                 genderTickM.setVisibility(View.VISIBLE);
                 maletrue = true;
                 femtrue = false;
-                gender="male";
+                gender = "male";
 
                 genderTickF.setVisibility(View.INVISIBLE);
 
@@ -318,7 +393,7 @@ public class TypeActivity extends AppCompatActivity {
                 genderTickF.setVisibility(View.VISIBLE);
                 femtrue = true;
                 maletrue = false;
-                gender="female";
+                gender = "female";
                 genderTickM.setVisibility(View.INVISIBLE);
             }
         });
@@ -337,7 +412,7 @@ public class TypeActivity extends AppCompatActivity {
                     etCarePhone = (EditText) findViewById(R.id.et_care_phone);
                     phone_number = String.valueOf(etCarePhone.getText());
                     if (!TextUtils.isEmpty(phone_number)) {
-                        coordinatorLayout.setCurrentPage(4, true);
+                        coordinatorLayout.setCurrentPage(3, true);
 
                         boolean phone_num_check = isValidMobile(phone_number);
                         if (phone_num_check) {
@@ -397,7 +472,22 @@ public class TypeActivity extends AppCompatActivity {
                 }
             }
         });
+        inputLayoutPassword = (TextInputLayout) findViewById(R.id.input_layout_password);
+        carenameNme = (EditText) findViewById(R.id.carename_nme);
+        careNumber = (EditText) findViewById(R.id.care_number);
+        careDeatils = (ImageView) findViewById(R.id.care_deatils);
+        careDeatils.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                caretakername=carenameNme.getText().toString().trim();
+                phonenumber=careNumber.getText().toString().trim();
+                new post_caretaker().execute();
+            }
+        });
+
     }
+
+
 
     public String generatePIN() {
 
@@ -448,7 +538,7 @@ public class TypeActivity extends AppCompatActivity {
             int nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
             phone_number = cursor.getString(phoneIndex);
             etCarePhone.setText("" + phone_number, EditText.BufferType.EDITABLE);
-            Log.i("daasd","fdsf");
+            Log.i("daasd", "fdsf");
 
 
         } catch (Exception e) {
@@ -467,12 +557,11 @@ public class TypeActivity extends AppCompatActivity {
             // super.onBackPressed();
             finish();
             return;
-        }
-        else {
-            backtoast= Toast.makeText(getBaseContext(),"Press back again to go back to main menu",Toast.LENGTH_SHORT);
+        } else {
+            backtoast = Toast.makeText(getBaseContext(), "Press back again to go back to main menu", Toast.LENGTH_SHORT);
             backtoast.show();
         }
-        backpresstime=System.currentTimeMillis();
+        backpresstime = System.currentTimeMillis();
         if (coordinatorLayout.getPageSelected() > 0) {
             coordinatorLayout.setCurrentPage(coordinatorLayout.getPageSelected() - 1, true);
         } else {
@@ -480,6 +569,7 @@ public class TypeActivity extends AppCompatActivity {
             System.exit(1);
         }
     }
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
@@ -487,7 +577,8 @@ public class TypeActivity extends AppCompatActivity {
         }
         return false;
     }
-    public class post extends AsyncTask<String, String, String>{
+
+    public class post extends AsyncTask<String, String, String> {
 
         @Override
         protected String doInBackground(String... strings) {
@@ -497,50 +588,68 @@ public class TypeActivity extends AppCompatActivity {
             //fetching the data
             //results.load();
             //Log.i("hi","" +String.valueOf(results));
-             //String name2 = Informations.toString();
-          // Log.i("hi",""+name);
-           String phone_numberw="8179535894" +
-                   "";
-           String wearer_fire_id= FirebaseInstanceId.getInstance().getToken();
-           sendPost(name,age,gender, bloodgrp,phone_numberw,wearer_fire_id,phone_number );
+            //String name2 = Informations.toString();
+
+
+            Log.i("update_poster", "" + name);
+            String phone_numberw =   mPhoneNumber ;
+            String wearer_fire_id = FirebaseInstanceId.getInstance().getToken();
+            sendPost(name, age, gender, bloodgrp, phone_numberw, wearer_fire_id, phone_number);
 
             return name;
         }
     }
-    public void sendPost(String name, String age,String gender,String bgrp,String user_id ,String wearer_fire_id,String caretaker_number) {
+
+    public void sendPost(String name, String age, String gender, String bgrp, String user_id, String wearer_fire_id, String caretaker_number) {
         //Log.i("hi",user_id);
-        mAPIService.savePost(user_id,name, age, gender ,bgrp,wearer_fire_id,caretaker_number).enqueue(new Callback<Post>() {
+        mAPIService.savePost(user_id, name, age, gender, bgrp, wearer_fire_id, caretaker_number).enqueue(new Callback<Post>() {
         });
 
     }
-    public class post_caretaker extends AsyncTask<String,String,String>{
+
+    public class post_caretaker extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... strings) {
             String caretaker_fire_id = FirebaseInstanceId.getInstance().getToken();
-            String phone_numberc= "7995530093";
-            String caretaker_name="Gyan sai";
-            sendPost_caretaker(caretaker_name,phone_numberc,caretaker_fire_id);
-        return phone_number;
+            String phone_numberc =phonenumber ;
+            String caretaker_name = caretakername;
+            sendPost_caretaker(caretaker_name, phone_numberc, caretaker_fire_id);
+            return phone_number;
         }
     }
-    public void sendPost_caretaker(String name,String caretaker_number,String caretaker_fire_id){
-        Log.i("called",caretaker_number);
-        mAPIService_caretaker.savePost_caretaker(name,caretaker_number,caretaker_fire_id).enqueue(new Callback<Post>(){});
+
+
+
+    public void sendPost_caretaker(String name, String caretaker_number, String caretaker_fire_id) {
+        Log.i("called", caretaker_number);
+        mAPIService_caretaker.savePost_caretaker(name, caretaker_number, caretaker_fire_id).enqueue(new Callback<Post>() {
+        });
     }
-    public class post_falltest extends AsyncTask<String,String,String> {
+
+    public class post_falltest extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... strings) {
-            String user_id= "8179535894";
+            String user_id = "8179535894";
+            //  String lcoation = getlocation();
             sendpost_falltest(user_id);
+            // Log.i("location :",""+lcoation);
             return user_id;
         }
     }
-    public void sendpost_falltest (String user_id){
-        Log.i("called",user_id);
-        mAPIService_falltest.savepost_falltest(user_id).enqueue(new Callback<Post>(){});
+
+//    private String getlocation() {
+//
+//        MyTracker tracker=new MyTracker(this);
+//       // String location=tracker.getLocation().toString();
+//        Log.i("mainloc",""+tracker.getLongitude());
+//        return "hi";
+//    }
+
+    public void sendpost_falltest(String user_id) {
+        Log.i("called", user_id);
+        mAPIService_falltest.savepost_falltest(user_id).enqueue(new Callback<Post>() {
+        });
     }
-
-
 
 
 }

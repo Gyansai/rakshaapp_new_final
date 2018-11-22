@@ -8,8 +8,7 @@ import retrofit2.http.POST;
 
 public interface APIService {
 
-    @POST("http://192.168.1.4:3000" +
-            "/wearer_details")
+    @POST("wearer_details")
     @FormUrlEncoded
     Call<POST> savePost(@Field("user_id") String user_id,
                         @Field("name") String title,

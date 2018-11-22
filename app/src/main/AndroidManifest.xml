@@ -3,6 +3,7 @@
     package="com.ksemin.raksha">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -10,6 +11,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-feature android:name="android.hardware.location.gps" />
 
     <uses-feature
         android:name="android.hardware.bluetooth_le"
@@ -51,10 +53,6 @@
         <service
             android:name=".wearer.bluetooth.BluetoothLeService"
             android:enabled="true" />
-
-        <activity
-            android:name=".wearer.bluetooth.DeviceScanActivity"
-            android:label="@string/app_name"></activity>
         <activity android:name=".welcomeFragments.falldetected" />
 
 

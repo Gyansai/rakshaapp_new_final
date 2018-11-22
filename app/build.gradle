@@ -48,6 +48,7 @@ dependencies {
     compile 'com.github.deano2390:MaterialShowcaseView:1.2.0'
     implementation 'com.cuneytayyildiz:onboarder:1.0.2'
     compile 'com.github.hajiyevelnur92:intentanimation:1.0'
+    compile'com.github.ankitdubey021:GPSTracker:1.1'
 
     compile 'com.github.halysongoncalves:pugnotification:1.8.1'
     compile 'com.squareup.retrofit2:retrofit:2.3.0'

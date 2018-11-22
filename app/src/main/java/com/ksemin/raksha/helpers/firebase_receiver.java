@@ -1,11 +1,19 @@
 package com.ksemin.raksha.helpers;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.ksemin.raksha.R;
+import com.ksemin.raksha.TypeActivity;
 
 import br.com.goncalves.pugnotification.notification.PugNotification;
 
@@ -13,6 +21,7 @@ public class firebase_receiver extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMsgService";
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         // ...
@@ -26,17 +35,23 @@ public class firebase_receiver extends FirebaseMessagingService {
 
             String s = remoteMessage.getData().get("score");
             Log.d(TAG, "Message data payload:"+s );
-            PugNotification.with(this)
-               .load()
-                .title("Raksha")
-               .message(s)
-                    .bigTextStyle(" Raksha")
-                .ongoing(false)
-                .smallIcon(R.mipmap.applogo)
-                .largeIcon(R.mipmap.applogo)
-                .flags(Notification.DEFAULT_ALL)
-               .simple()
-                .build();
+
+            int notifyID = 1;
+            String CHANNEL_ID = "my_channel_01";// The id of the channel.
+            CharSequence name = "abc";// The user-visible name of the channel.
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
+
+            Notification notification = new Notification.Builder(firebase_receiver.this)
+                    .setContentTitle("raksha")
+                    .setContentText(s)
+                    .setSmallIcon(R.mipmap.applogo)
+                    .setChannelId(CHANNEL_ID)
+                    .build();
+            NotificationManager mNotificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.createNotificationChannel(mChannel);
+            mNotificationManager.notify(notifyID , notification);
 
             if (/* Check if data needs to be processed by long running job */ true) {
                 // For long-running tasks (10 seconds or more) use Firebase Job Dispatcher.

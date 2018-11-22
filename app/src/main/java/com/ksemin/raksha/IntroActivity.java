@@ -23,20 +23,20 @@ public class IntroActivity extends OnboarderActivity implements OnboarderPageCha
    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-      // FirebaseApp.initializeApp(this);
+       FirebaseApp.initializeApp(this);
 
 
-//        PugNotification.with(this)
-//                .load()
-//                .title("Raksha")
-//               .message("Welcome")
-//                .bigTextStyle(" Raksha")
-//                .ongoing(true)
-//                .smallIcon(R.mipmap.applogo)
-//                .largeIcon(R.mipmap.applogo)
-//                .flags(Notification.DEFAULT_ALL)
-//               .simple()
-//                .build();
+      PugNotification.with(this)
+               .load()
+              .title("Raksha")
+             .message("Welcome")
+             .bigTextStyle(" Raksha")
+             .ongoing(true)
+             .smallIcon(R.mipmap.applogo)
+             .largeIcon(R.mipmap.applogo)
+             .flags(Notification.DEFAULT_ALL)
+            .simple()
+               .build();
 
         List<OnboarderPage> pages = Arrays.asList(
                 new OnboarderPage.Builder()
